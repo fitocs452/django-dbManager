@@ -18,14 +18,20 @@ def queryExecute(request):
         # check whether it's valid:
         if form.is_valid():
             query = form.cleaned_data['query']
-            query = query.lower()
+            form = QuerySearch()
+            error = False
 
+            # try:
             cursor = connection.cursor()
             cursor.execute(query)
             rows = cursor.fetchall()
 
-            form = QuerySearch()
             headers = parseSQL(query)
+            # except Exception, e:
+            #     rows = None
+            #     headers = None
+            #     error = True
+
 
             # tables = extract_tables(query)
 
@@ -36,6 +42,7 @@ def queryExecute(request):
                     'queryResult': rows,
                     'headers': headers,
                     'search_query_form': form,
+                    'error': error
                     # 'tables': tables
                 }
             )
@@ -59,6 +66,7 @@ def addDatabaseConnection(request):
     return render(request, 'database_manager/connections.html', {'add_connection_form': form})
 
 def parseSQL(query):
+    query = query.lower()
     # Database connection
     cursor = connection.cursor()
 
@@ -66,7 +74,6 @@ def parseSQL(query):
     columnNameQuery = "SELECT column_name FROM information_schema.columns WHERE table_name='%s'"
 
     fieldsSelected = find_between(query, 'select', 'from')
-    fieldsSelected = fieldsSelected.replace(" ", "")
 
     if ('*' in fieldsSelected):
         tables = extract_tables(query)
@@ -74,19 +81,29 @@ def parseSQL(query):
         for table in tables:
             columnsSelectQuery = columnNameQuery % table
             cursor.execute(columnsSelectQuery)
-            haders = cursor.fetchall()
+            headers = cursor.fetchall()
 
             fieldsSelected = fieldsSelected + headers
+            fieldsSelected = normalizeColumnNames(fieldsSelected)
         return fieldsSelected
     else:
+        fieldsSelected = fieldsSelected.replace(" ", "")
         columns = fieldsSelected.split(',')
-        return columns
 
-    return fieldsSelected
+        fieldsSelected = []
+
+        for column in columns:
+            if ('as' in column):
+                index = column.index('as') + 2
+                column = column[index:]
+
+            fieldsSelected.append(column)
+
+        return fieldsSelected
 
 ####################### Functions #############################
 
-def find_between(s, first, last ):
+def find_between(s, first, last):
     try:
         start = s.index( first ) + len( first )
         end = s.index( last, start )
@@ -129,3 +146,14 @@ def extract_table_identifiers(token_stream):
 def extract_tables(query):
     stream = extract_from_part(sqlparse.parse(query)[0])
     return list(extract_table_identifiers(stream))
+
+def normalizeColumnNames(columnNames):
+    normalizedColumnNames = []
+    for columnName in columnNames:
+        columnName = str(columnName)
+        if ("u'" in columnName):
+            columnName = find_between(columnName, "u'", "'")
+
+        normalizedColumnNames.append(columnName)
+
+    return normalizedColumnNames

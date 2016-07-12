@@ -4,6 +4,7 @@
 <head>
     <title>Query Search</title>
 </head>
+
 <body>
     <h1>Query Search</h1>
     <div>
@@ -13,7 +14,7 @@
             <input type="submit" value="Run"/>
         </form>
     </div>
-    {% if queryResult != null and headers != null %}
+    {% if queryResult != None and headers != None %}
         <!-- <h2>{{ tables }}</h2> -->
         <div>
             <table border="1">
@@ -33,6 +34,10 @@
                 </tbody>
             </table>
         </div>
+    {% endif %}
+
+    {% if error %}
+        <h2>Error</h2>
     {% endif %}
 </body>
 
