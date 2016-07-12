@@ -21,17 +21,19 @@ def queryExecute(request):
             form = QuerySearch()
             error = False
 
-            # try:
-            cursor = connection.cursor()
-            cursor.execute(query)
-            rows = cursor.fetchall()
+            try:
+                # We execute the query
+                cursor = connection.cursor()
+                cursor.execute(query)
+                rows = cursor.fetchall()
 
-            headers = parseSQL(query)
-            # except Exception, e:
-            #     rows = None
-            #     headers = None
-            #     error = True
+                # We obtain the column names to display as headers in table
+                headers = parseSQL(query)
 
+            except Exception, e:
+                rows = None
+                headers = None
+                error = True
 
             # tables = extract_tables(query)
 
@@ -75,28 +77,38 @@ def parseSQL(query):
 
     fieldsSelected = find_between(query, 'select', 'from')
 
+    # Here we evaluate if is necessary to get the column names
     if ('*' in fieldsSelected):
         tables = extract_tables(query)
         fieldsSelected = []
         for table in tables:
+            # We set the table parameter to the query to extract column names
             columnsSelectQuery = columnNameQuery % table
             cursor.execute(columnsSelectQuery)
             headers = cursor.fetchall()
 
             fieldsSelected = fieldsSelected + headers
-            fieldsSelected = normalizeColumnNames(fieldsSelected)
+
+        # Is probably that we have tuples so we normalized them
+        fieldsSelected = normalizeColumnNames(fieldsSelected)
+
         return fieldsSelected
+
+    # If we have specific fields to select
     else:
         fieldsSelected = fieldsSelected.replace(" ", "")
         columns = fieldsSelected.split(',')
 
         fieldsSelected = []
 
+        # We evaluate if each field has alias or not
         for column in columns:
+            # if has alias, we show the alias
             if ('as' in column):
                 index = column.index('as') + 2
                 column = column[index:]
 
+            # if not we show the field as in database
             fieldsSelected.append(column)
 
         return fieldsSelected
@@ -150,10 +162,13 @@ def extract_tables(query):
 def normalizeColumnNames(columnNames):
     normalizedColumnNames = []
     for columnName in columnNames:
+        # here we cast the tuple to string (if is a tuple)
         columnName = str(columnName)
+        # we evaluate is a tuple
         if ("u'" in columnName):
             columnName = find_between(columnName, "u'", "'")
 
+        # this is the base case
         normalizedColumnNames.append(columnName)
 
     return normalizedColumnNames
