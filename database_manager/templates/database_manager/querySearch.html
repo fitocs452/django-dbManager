@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Query Search</title>
+</head>
+<body>
+    <h1>Query Search</h1>
+    <div>
+        <form action="{% url 'database_manager:queryExecute' %}" method="post">
+            {% csrf_token %}
+            {{ search_query_form }}
+            <input type="submit" value="Run"/>
+        </form>
+    </div>
+    {% if queryResult != null and headers != null %}
+        <!-- <h2>{{ tables }}</h2> -->
+        <div>
+            <table border="1">
+                <thead>
+                    {% for header in headers %}
+                        <th>{{ header }}</th>
+                    {% endfor %}
+                </thead>
+                <tbody>
+                    {% for row in queryResult %}
+                    <tr>
+                        {% for data in row%}
+                            <td>{{ data }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</body>
+
+</html>
