@@ -7,6 +7,8 @@ import sqlparse
 from sqlparse.sql import IdentifierList, Identifier
 from sqlparse.tokens import Keyword, DML
 
+from django.contrib import messages
+
 def dashboard(request):
     return render(request, 'database_manager/dashboard.html', {})
 
@@ -18,8 +20,24 @@ def queryExecute(request):
         # check whether it's valid:
         if form.is_valid():
             query = form.cleaned_data['query']
-            form = QuerySearch()
-            error = False
+
+            data = {
+                'query': query
+            }
+            form = QuerySearch(data)
+
+            if verifyQuery(query) == False:
+                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query valid")
+
+                return render(
+                    request,
+                    'database_manager/querySearch.html',
+                    {
+                        'queryResult': None,
+                        'headers': None,
+                        'search_query_form': form,
+                    }
+                )
 
             try:
                 # We execute the query
@@ -30,10 +48,12 @@ def queryExecute(request):
                 # We obtain the column names to display as headers in table
                 headers = parseSQL(query)
 
+                messages.success(request, "Query executed!")
             except Exception, e:
                 rows = None
                 headers = None
-                error = True
+
+                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query valid")
 
             # tables = extract_tables(query)
 
@@ -44,8 +64,6 @@ def queryExecute(request):
                     'queryResult': rows,
                     'headers': headers,
                     'search_query_form': form,
-                    'error': error
-                    # 'tables': tables
                 }
             )
 
@@ -172,3 +190,17 @@ def normalizeColumnNames(columnNames):
         normalizedColumnNames.append(columnName)
 
     return normalizedColumnNames
+
+# Restriction to use sql only to select
+def verifyQuery(query):
+    query = str(query.lower())
+    sqlActionsNotAllowed = ['insert', 'drop', 'delete', 'update', 'create']
+
+    if ("select" in query) == False:
+        return False
+
+    for action in sqlActionsNotAllowed:
+        if (action in query) == True:
+            return False
+
+    return True

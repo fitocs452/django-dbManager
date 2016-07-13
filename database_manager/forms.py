@@ -1,7 +1,7 @@
 from django import forms
 
 class QuerySearch(forms.Form):
-    query = forms.CharField(label='Query', max_length=250)
+    query = forms.CharField(label='', max_length=250, widget=forms.Textarea, required=True)
 
 class DatabaseConnection(forms.Form):
     databaseName = forms.CharField(label="Database Name", max_length=50)

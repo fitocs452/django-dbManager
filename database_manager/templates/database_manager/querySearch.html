@@ -1,23 +1,55 @@
 <!DOCTYPE html>
 <html>
 
+{% load bootstrap3 %}
+
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{# Display django.contrib.messages as Bootstrap alerts #}
+{% bootstrap_messages %}
+
 <head>
+    {% load staticfiles %}
+
+    <link rel="stylesheet" type="text/css" href="{% static 'database_manager/styles.css' %}" />
     <title>Query Search</title>
 </head>
 
 <body>
     <h1>Query Search</h1>
-    <div>
-        <form action="{% url 'database_manager:queryExecute' %}" method="post">
+    <div class="container">
+        <form action="{% url 'database_manager:queryExecute' %}" method="post" >
             {% csrf_token %}
-            {{ search_query_form }}
-            <input type="submit" value="Run"/>
+
+            <div class="row">
+                <div class="col-sm-offset-2">
+                    {% bootstrap_form search_query_form layout="horizontal"%}
+                </div>
+            </div>
+
+            <div class="row">
+                {% buttons %}
+                    <div class="col-sm-2 col-sm-offset-2">
+                        <button name="clear-button" value="clear" type="submit" class="btn btn-primary margin-left-28px">
+                            {% bootstrap_icon "glyphicon glyphicon-trash" %} Clear
+                        </button>
+                    </div>
+                    <div class="col-sm-2 col-sm-offset-4">
+                        <button id="run-button" value="run" type="submit" class="btn btn-primary margin-right-18px">
+                            {% bootstrap_icon "glyphicon glyphicon-play" %} Run
+                        </button>
+                    </div>
+                {% endbuttons %}
+            </div>
         </form>
     </div>
+
     {% if queryResult != None and headers != None %}
-        <!-- <h2>{{ tables }}</h2> -->
-        <div>
-            <table border="1">
+    <div>
+        <div class="col-sm-8 col-sm-offset-2">
+            <table class="table table-bordered">
                 <thead>
                     {% for header in headers %}
                         <th>{{ header }}</th>
@@ -34,10 +66,8 @@
                 </tbody>
             </table>
         </div>
-    {% endif %}
-
-    {% if error %}
-        <h2>Error</h2>
+        <div class="col-sm-1"></div>
+    </div>
     {% endif %}
 </body>
 
