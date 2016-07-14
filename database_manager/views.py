@@ -3,16 +3,20 @@ from django.http import HttpResponse
 from django.db import connection
 
 from .forms import *
+
 import sqlparse
 from sqlparse.sql import IdentifierList, Identifier
 from sqlparse.tokens import Keyword, DML
 
+import MySQLdb
+
 from django.contrib import messages
+from .models import *
 
 def dashboard(request):
     return render(request, 'database_manager/dashboard.html', {})
 
-def queryExecute(request):
+def queryExecute(request, db_connection_id):
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
@@ -36,6 +40,7 @@ def queryExecute(request):
                         'queryResult': None,
                         'headers': None,
                         'search_query_form': form,
+                        'db_connection_id': db_connection_id
                     }
                 )
 
@@ -64,26 +69,66 @@ def queryExecute(request):
                     'queryResult': rows,
                     'headers': headers,
                     'search_query_form': form,
+                    'db_connection_id': db_connection_id
                 }
             )
 
     else:
         form = QuerySearch()
 
-    return render(request, 'database_manager/querySearch.html', {'search_query_form': form})
+    return render(
+        request,
+        'database_manager/querySearch.html',
+        {
+            'search_query_form': form,
+            'db_connection_id': db_connection_id
+        }
+    )
 
 def addDatabaseConnection(request):
     if request.method == 'POST':
-        form = DatabaseConnection(request.POST)
+
+        form = DatabaseConnectionForm(request.POST)
 
         if form.is_valid():
+            name = form.cleaned_data['name'];
+            databaseName = form.cleaned_data['databaseName'];
+            hostName = form.cleaned_data['hostName'];
+            port = form.cleaned_data['port'];
+            username = form.cleaned_data['username'];
+            password = form.cleaned_data['password'];
 
-            return render(request, 'database_manager/dashboard.html', {})
+            if (testDbConnection(hostName, port, username, password, databaseName) == False):
+                messages.error(request, "Connection failed")
+                return render(request, 'database_manager/addDbConnection.html', {'add_connection_form': form})
+
+            try:
+                dbConnection = DatabaseConnection(
+                    name= name,
+                    databaseName= databaseName,
+                    hostName= hostName,
+                    port= port,
+                    username= username,
+                    password= password
+                )
+
+                dbConnection.save()
+
+                form = DatabaseConnectionForm()
+                messages.success(request, "Connection Created")
+            except Exception, e:
+                messages.error(request, "Invalid data")
+
+            return render(request, 'database_manager/addDbConnection.html', {'add_connection_form': form})
 
     else:
-        form = QuerySearch()
+        form = DatabaseConnectionForm()
 
-    return render(request, 'database_manager/connections.html', {'add_connection_form': form})
+    return render(request, 'database_manager/addDbConnection.html', {'add_connection_form': form})
+
+def listDbConnections(request):
+    dbConnections = DatabaseConnection.objects.all()
+    return render(request, 'database_manager/listDbConnections.html', {'database_connections':dbConnections})
 
 def parseSQL(query):
     query = query.lower()
@@ -204,3 +249,14 @@ def verifyQuery(query):
             return False
 
     return True
+
+def testDbConnection(host, port, user, passwd, db):
+    try:
+        db = MySQLdb.connect(host=host,port=int(port), user=user,passwd=passwd,db=db)
+        cursor = db.cursor()
+        cursor.execute("SELECT VERSION()")
+        results = cursor.fetchone()
+
+        return True
+    except Exception, e:
+        return False

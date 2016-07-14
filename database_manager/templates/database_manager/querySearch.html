@@ -36,9 +36,16 @@
 </head>
 
 <body>
-    <h1>Query Search</h1>
     <div class="container">
-        <form action="{% url 'database_manager:queryExecute' %}" method="post" >
+        <div class="page-header">
+            <h1>Run Queries</h1>
+        </div>
+    </div>
+    <div class="container">
+        <a href="{% url 'database_manager:db_connections_list' %}" class="btn btn-primary">List connections</a>
+    </div>
+    <div class="container">
+        <form action="{% url 'database_manager:db_run_querie' db_connection_id %}" method="post" >
             {% csrf_token %}
 
             <div class="row">

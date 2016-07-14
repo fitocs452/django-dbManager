@@ -1,13 +1,29 @@
 <!DOCTYPE html>
 <html>
+
+{% load bootstrap3 %}
+
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{# Display django.contrib.messages as Bootstrap alerts #}
+{% bootstrap_messages %}
+
 <head>
     <title>Dashboard</title>
 </head>
 <body>
-    <h1>Welcome to the Dashboard</h1>
+    <div class="container">
+        <div class="page-header">
+            <h1>Dashboard</h1>
+        </div>
+    </div>
 
-    <div id="menu">
-        <a href="{% url 'database_manager:queryExecute' %}" class="btn btn-default">Query Executor</a>
+    <div class="container">
+        <div id="dashboard-options">
+            <a href="{% url 'database_manager:db_connections_list' %}" class="btn btn-default">Database Connections</a>
+        </div>
     </div>
 </body>
 </html>

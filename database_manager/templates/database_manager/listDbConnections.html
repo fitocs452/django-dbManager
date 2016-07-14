@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+{% load bootstrap3 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% bootstrap_messages %}
+
+<head>
+    {% load staticfiles %}
+    <title>Database Connections</title>
+    <style type="text/css">
+        .add-button {
+            float: left;
+        }
+    </style>
+</head>
+
+<body>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>Database Connections</h1>
+        </div>
+    </div>
+    <div class="container">
+        <a
+            href="{% url 'database_manager:db_connections_add' %}"
+            id="db-connection-button"
+            type="submit"
+            class="btn btn-primary"
+        >
+            {% bootstrap_icon "glyphicon glyphicon-plus" %} Add connection
+        </a>
+    </div>
+
+    <div class="container">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Database</th>
+                    <th>Host</th>
+                    <th>Port</th>
+                    <th>Actions</th>
+                </thead>
+                <tbody>
+                    {% for db in database_connections %}
+                    <tr>
+                        <td>{{ db.id }}</td>
+                        <td>{{ db.name }}</td>
+                        <td>{{ db.databaseName }}</td>
+                        <td>{{ db.hostName }}</td>
+                        <td>{{ db.port }}</td>
+                        <td>
+                            <a
+                                href="{% url 'database_manager:db_run_querie' db.id %}"
+                                id="db-connection-button"
+                                type="submit"
+                                class="btn btn-sm"
+                            >
+                                {% bootstrap_icon "glyphicon glyphicon-plus" %} Run queries
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
