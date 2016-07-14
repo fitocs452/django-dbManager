@@ -36,7 +36,7 @@ def db_connection_run_queries(request, db_connection_id):
             form = QuerySearch(data)
 
             if verifyQuery(query) == False:
-                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query valid 222222")
+                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query valid")
 
                 return render(
                     request,
