@@ -8,15 +8,10 @@
 
 {% bootstrap_messages %}
 
+{% load staticfiles %}
 <head>
-    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'database_manager/styles.css' %}" />
     <title>Database Connection</title>
-    <style type="text/css">
-        .save-button {
-            margin-top: 15px;
-            margin-left: 58px;
-        }
-    </style>
 </head>
 
 <body>
@@ -26,7 +21,12 @@
         </div>
     </div>
     <div class="container">
-        <a href="{% url 'database_manager:db_connections_list' %}" class="btn btn-primary">List connections</a>
+        <a
+            href="{% url 'database_manager:db_connections_list' %}"
+            class="btn btn-primary"
+        >
+            {% bootstrap_icon "glyphicon glyphicon glyphicon-chevron-left" %} List connections
+        </a>
     </div>
     <div style="margin-top: 15px;" class="container">
         <form action="{% url 'database_manager:db_connections_add' %}" method="post" >

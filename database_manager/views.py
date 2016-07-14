@@ -1,6 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
+from django.template import *
+from django.core.urlresolvers import *
+from django.views import *
 from django.db import connection
+from django.views.generic import TemplateView
 
 from .forms import *
 
@@ -16,7 +20,8 @@ from .models import *
 def dashboard(request):
     return render(request, 'database_manager/dashboard.html', {})
 
-def queryExecute(request, db_connection_id):
+def db_connection_run_queries(request, db_connection_id):
+    dbConnection = get_object_or_404(DatabaseConnection, pk=db_connection_id)
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
@@ -31,11 +36,11 @@ def queryExecute(request, db_connection_id):
             form = QuerySearch(data)
 
             if verifyQuery(query) == False:
-                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query valid")
+                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query valid 222222")
 
                 return render(
                     request,
-                    'database_manager/querySearch.html',
+                    'database_manager/db_connection_run_querie.html',
                     {
                         'queryResult': None,
                         'headers': None,
@@ -44,27 +49,34 @@ def queryExecute(request, db_connection_id):
                     }
                 )
 
+            db = dbConnection.databaseName
+            host = dbConnection.hostName
+            port = dbConnection.port
+            user = dbConnection.username
+            passwd = dbConnection.password
+
             try:
                 # We execute the query
-                cursor = connection.cursor()
+                db = MySQLdb.connect(host=host, port=int(port), user=user,passwd=passwd,db=db)
+                cursor = db.cursor()
                 cursor.execute(query)
                 rows = cursor.fetchall()
 
                 # We obtain the column names to display as headers in table
-                headers = parseSQL(query)
+                headers = parseSQL(query, cursor)
 
                 messages.success(request, "Query executed!")
             except Exception, e:
                 rows = None
                 headers = None
 
-                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query valid")
+                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query validS")
 
             # tables = extract_tables(query)
 
             return render(
                 request,
-                'database_manager/querySearch.html',
+                'database_manager/db_connection_run_querie.html',
                 {
                     'queryResult': rows,
                     'headers': headers,
@@ -78,29 +90,33 @@ def queryExecute(request, db_connection_id):
 
     return render(
         request,
-        'database_manager/querySearch.html',
+        'database_manager/db_connection_run_querie.html',
         {
             'search_query_form': form,
             'db_connection_id': db_connection_id
         }
     )
 
-def addDatabaseConnection(request):
+def db_connection_list(request):
+    dbConnections = DatabaseConnection.objects.all()
+    return render(request, 'database_manager/db_connection_list.html', {'database_connections':dbConnections})
+
+def db_connection_add(request):
     if request.method == 'POST':
 
         form = DatabaseConnectionForm(request.POST)
 
         if form.is_valid():
-            name = form.cleaned_data['name'];
-            databaseName = form.cleaned_data['databaseName'];
-            hostName = form.cleaned_data['hostName'];
-            port = form.cleaned_data['port'];
-            username = form.cleaned_data['username'];
-            password = form.cleaned_data['password'];
+            name = form.cleaned_data['name']
+            databaseName = form.cleaned_data['databaseName']
+            hostName = form.cleaned_data['hostName']
+            port = form.cleaned_data['port']
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
 
             if (testDbConnection(hostName, port, username, password, databaseName) == False):
                 messages.error(request, "Connection failed")
-                return render(request, 'database_manager/addDbConnection.html', {'add_connection_form': form})
+                return render(request, 'database_manager/db_connection_add.html', {'add_connection_form': form})
 
             try:
                 dbConnection = DatabaseConnection(
@@ -119,21 +135,76 @@ def addDatabaseConnection(request):
             except Exception, e:
                 messages.error(request, "Invalid data")
 
-            return render(request, 'database_manager/addDbConnection.html', {'add_connection_form': form})
+            return render(request, 'database_manager/db_connection_add.html', {'add_connection_form': form})
 
     else:
         form = DatabaseConnectionForm()
 
-    return render(request, 'database_manager/addDbConnection.html', {'add_connection_form': form})
+    return render(request, 'database_manager/db_connection_add.html', {'add_connection_form': form})
 
-def listDbConnections(request):
+def db_connection_edit(request, db_connection_id):
+    dbConnection = get_object_or_404(DatabaseConnection, pk=db_connection_id)
+    if request.method == 'POST':
+
+        form = DatabaseConnectionEditForm(request.POST, instance=dbConnection)
+
+        if form.is_valid():
+            databaseName = form.cleaned_data['databaseName']
+            hostName = form.cleaned_data['hostName']
+            port = form.cleaned_data['port']
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+
+            if (testDbConnection(hostName, port, username, password, databaseName) == False):
+                messages.error(request, "Connection failed")
+
+                return render(
+                    request,
+                    'database_manager/db_connection_edit.html',
+                    {
+                        'edit_connection_form': form,
+                        'db_connection': dbConnection
+                    }
+                )
+
+            try:
+                form.save()
+                messages.success(request, "Connection Edited")
+            except Exception, e:
+                messages.error(request, "Invalid data")
+
+        dbConnections = DatabaseConnection.objects.all()
+        return render(request, 'database_manager/db_connection_list.html', {'database_connections':dbConnections})
+
+    else:
+        form = DatabaseConnectionEditForm(instance=dbConnection)
+
+    return render(
+        request,
+        'database_manager/db_connection_edit.html',
+        {
+            'edit_connection_form': form,
+            'db_connection': dbConnection
+        }
+    )
+
+def db_connection_delete(request, db_connection_id):
     dbConnections = DatabaseConnection.objects.all()
-    return render(request, 'database_manager/listDbConnections.html', {'database_connections':dbConnections})
+    try:
+        dbConnection = get_object_or_404(DatabaseConnection, pk=db_connection_id)
+        dbConnection.delete()
+        messages.success(request, "Connection deleted")
+    except Exception, e:
+        messages.error(request, "Connection not deleted")
 
-def parseSQL(query):
+    return render(request, 'database_manager/db_connection_list.html', {'database_connections':dbConnections})
+
+####################### Functions #############################
+
+def parseSQL(query, cursor):
     query = query.lower()
     # Database connection
-    cursor = connection.cursor()
+    # cursor = connection.cursor()
 
     # Query to select columns from tables (if not defined in select statement)
     columnNameQuery = "SELECT column_name FROM information_schema.columns WHERE table_name='%s'"
@@ -150,7 +221,7 @@ def parseSQL(query):
             cursor.execute(columnsSelectQuery)
             headers = cursor.fetchall()
 
-            fieldsSelected = fieldsSelected + headers
+            fieldsSelected = fieldsSelected + list(headers)
 
         # Is probably that we have tuples so we normalized them
         fieldsSelected = normalizeColumnNames(fieldsSelected)
@@ -175,8 +246,6 @@ def parseSQL(query):
             fieldsSelected.append(column)
 
         return fieldsSelected
-
-####################### Functions #############################
 
 def find_between(s, first, last):
     try:
@@ -228,8 +297,8 @@ def normalizeColumnNames(columnNames):
         # here we cast the tuple to string (if is a tuple)
         columnName = str(columnName)
         # we evaluate is a tuple
-        if ("u'" in columnName):
-            columnName = find_between(columnName, "u'", "'")
+        if ("u'" in columnName or "('" in columnName):
+            columnName = find_between(columnName, "'", "'")
 
         # this is the base case
         normalizedColumnNames.append(columnName)
