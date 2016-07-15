@@ -10,6 +10,8 @@
 
 <head>
     {% load staticfiles %}
+    <script src="{% static 'static_jquery/js/jquery.js' %}" type="text/javascript"></script>
+    <script src="{% static 'database_manager/js/functions.js' %}" type="text/javascript"></script>
     <title>Database Connections</title>
 </head>
 
@@ -67,6 +69,7 @@
                             </a>
 
                             <a
+                                name="delete-button"
                                 href="{% url 'database_manager:db_connections_delete' db.id %}"
                                 type="submit"
                                 class="btn btn-sm"
@@ -78,6 +81,16 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <div id="confirm" class="modal hide fade">
+        <div class="modal-body">
+            Are you sure?
+        </div>
+        <div class="modal-footer">
+            <button type="button" data-dismiss="modal" class="btn btn-primary" id="delete">Delete</button>
+            <button type="button" data-dismiss="modal" class="btn">Cancel</button>
         </div>
     </div>
 </body>
