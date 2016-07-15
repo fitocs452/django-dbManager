@@ -116,7 +116,7 @@ def db_connection_add(request):
 
             if (testDbConnection(hostName, port, username, password, databaseName) == False):
                 messages.error(request, "Connection failed")
-                return render(request, 'database_manager/db_connection_add.html', {'add_connection_form': form})
+                return render(request, 'database_manager/db_connection_add.html', {'add_connection_form': form, 'error_message':'bad connection'})
 
             try:
                 dbConnection = DatabaseConnection(
@@ -140,7 +140,7 @@ def db_connection_add(request):
     else:
         form = DatabaseConnectionForm()
 
-    return render(request, 'database_manager/db_connection_add.html', {'add_connection_form': form})
+    return render(request, 'database_manager/db_connection_add.html', {'add_connection_form': form, 'error_message':'nuevo'})
 
 def db_connection_edit(request, db_connection_id):
     dbConnection = get_object_or_404(DatabaseConnection, pk=db_connection_id)
