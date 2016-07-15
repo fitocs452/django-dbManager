@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+{% load bootstrap3 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% bootstrap_messages %}
+
+{% load staticfiles %}
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static 'database_manager/styles.css' %}" />
+    <title>Database Connection</title>
+</head>
+
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>Add Database Connection</h1>
+        </div>
+    </div>
+    <div class="container">
+        <a
+            href="{% url 'database_manager:db_connections_list' %}"
+            class="btn btn-primary"
+        >
+            {% bootstrap_icon "glyphicon glyphicon glyphicon-chevron-left" %} List connections
+        </a>
+    </div>
+    <div style="margin-top: 15px;" class="container">
+        <form action="{% url 'database_manager:db_connections_add' %}" method="post" >
+            {% csrf_token %}
+
+            <div class="row">
+                <div class="col-sm-10">
+                    {% bootstrap_form add_connection_form layout="horizontal"%}
+                </div>
+            </div>
+
+            <div class="row">
+                {% buttons %}
+                    <div class="col-sm-2 col-sm-offset-8">
+                        <button
+                            id="save-button"
+                            type="submit"
+                            class="btn btn-primary save-button"
+                        >
+                            {% bootstrap_icon "glyphicon glyphicon-floppy-disk" %} Guardar
+                        </button>
+                    </div>
+                {% endbuttons %}
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>

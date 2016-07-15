@@ -15,3 +15,12 @@ label[for='id_query'] {
     margin-top: 15px;
     margin-bottom: 15px;
 }
+
+.save-button {
+    margin-top: 15px;
+    margin-left: 58px;
+}
+
+.add-button {
+    float: left;
+}
