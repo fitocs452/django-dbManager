@@ -70,7 +70,7 @@ def db_connection_run_queries(request, db_connection_id):
                 rows = None
                 headers = None
 
-                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query validS")
+                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query valid")
 
             # tables = extract_tables(query)
 
