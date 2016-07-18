@@ -24,6 +24,13 @@
     </div>
     <div class="container">
         <a
+            href="{% url 'database_manager:dashboard' %}"
+            type="submit"
+            class="btn btn-primary"
+        >
+            {% bootstrap_icon "glyphicon glyphicon-chevron-left" %} Dashboard
+        </a>
+        <a
             href="{% url 'database_manager:db_connections_add' %}"
             type="submit"
             class="btn btn-primary"

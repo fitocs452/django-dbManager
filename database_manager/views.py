@@ -38,7 +38,7 @@ def db_connection_run_queries(request, db_connection_id):
             if verifyQuery(query) == False:
                 messages.error(request, "The Sql Query is not permitted, please enter a Sql Query valid")
 
-                queries_saved_list = DatabaseQuery.objects.all()
+                queries_saved_list = DatabaseQuery.objects.filter(database_connection = dbConnection)
 
                 return render(
                     request,
@@ -77,7 +77,7 @@ def db_connection_run_queries(request, db_connection_id):
 
             # tables = extract_tables(query)
 
-            queries_saved_list = DatabaseQuery.objects.all()
+            queries_saved_list = DatabaseQuery.objects.filter(database_connection = dbConnection)
 
             return render(
                 request,
@@ -94,7 +94,7 @@ def db_connection_run_queries(request, db_connection_id):
     else:
         form = QuerySearch()
 
-    queries_saved_list = DatabaseQuery.objects.all()
+    queries_saved_list = DatabaseQuery.objects.filter(database_connection = dbConnection)
 
     return render(
         request,
@@ -294,7 +294,7 @@ def db_connection_run_query(request, db_connection_id, db_query_id):
 
     # tables = extract_tables(query)
     form = QuerySearch(initial = { 'query': query})
-    queries_saved_list = DatabaseQuery.objects.all()
+    queries_saved_list = DatabaseQuery.objects.filter(database_connection = dbConnection)
 
     return render(
         request,
