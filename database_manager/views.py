@@ -38,6 +38,8 @@ def db_connection_run_queries(request, db_connection_id):
             if verifyQuery(query) == False:
                 messages.error(request, "The Sql Query is not permitted, please enter a Sql Query valid")
 
+                queries_saved_list = DatabaseQuery.objects.all()
+
                 return render(
                     request,
                     'database_manager/db_connection_run_querie.html',
@@ -45,7 +47,8 @@ def db_connection_run_queries(request, db_connection_id):
                         'queryResult': None,
                         'headers': None,
                         'search_query_form': form,
-                        'db_connection_id': db_connection_id
+                        'db_connection_id': db_connection_id,
+                        'queries_list': queries_saved_list
                     }
                 )
 
@@ -74,6 +77,8 @@ def db_connection_run_queries(request, db_connection_id):
 
             # tables = extract_tables(query)
 
+            queries_saved_list = DatabaseQuery.objects.all()
+
             return render(
                 request,
                 'database_manager/db_connection_run_querie.html',
@@ -81,19 +86,23 @@ def db_connection_run_queries(request, db_connection_id):
                     'queryResult': rows,
                     'headers': headers,
                     'search_query_form': form,
-                    'db_connection_id': db_connection_id
+                    'db_connection_id': db_connection_id,
+                    'queries_list': queries_saved_list
                 }
             )
 
     else:
         form = QuerySearch()
 
+    queries_saved_list = DatabaseQuery.objects.all()
+
     return render(
         request,
         'database_manager/db_connection_run_querie.html',
         {
             'search_query_form': form,
-            'db_connection_id': db_connection_id
+            'db_connection_id': db_connection_id,
+            'queries_list': queries_saved_list
         }
     )
 
@@ -116,7 +125,7 @@ def db_connection_add(request):
 
             if (testDbConnection(hostName, port, username, password, databaseName) == False):
                 messages.error(request, "Connection failed")
-                return render(request, 'database_manager/db_connection_add.html', {'add_connection_form': form, 'error_message':'bad connection'})
+                return render(request, 'database_manager/db_connection_add.html', {'add_connection_form': form})
 
             try:
                 dbConnection = DatabaseConnection(
@@ -140,7 +149,7 @@ def db_connection_add(request):
     else:
         form = DatabaseConnectionForm()
 
-    return render(request, 'database_manager/db_connection_add.html', {'add_connection_form': form, 'error_message':'nuevo'})
+    return render(request, 'database_manager/db_connection_add.html', {'add_connection_form': form})
 
 def db_connection_edit(request, db_connection_id):
     dbConnection = get_object_or_404(DatabaseConnection, pk=db_connection_id)
@@ -198,6 +207,106 @@ def db_connection_delete(request, db_connection_id):
         messages.error(request, "Connection not deleted")
 
     return render(request, 'database_manager/db_connection_list.html', {'database_connections':dbConnections})
+
+def db_query_save(request, db_connection_id):
+    dbConnection = get_object_or_404(DatabaseConnection, pk = db_connection_id)
+
+    if request.method == 'POST':
+        print "Tomo el POST"
+
+        form = DatabaseQueryForm(request.POST)
+
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            query = form.cleaned_data['query']
+
+            dbConnection = get_object_or_404(DatabaseConnection, pk = db_connection_id)
+
+            database_query = DatabaseQuery(
+                name = name,
+                query = query,
+                database_connection = dbConnection
+            )
+
+            print request.POST.get("id_query", "")
+
+            database_query.save()
+            try:
+
+                form = DatabaseQueryForm()
+                messages.success(request, "Query Saved")
+            except Exception, e:
+                messages.error(request, "Invalid data")
+
+            return render(
+                request,
+                'database_manager/db_query_add.html',
+                {
+                    'add_query_form': form,
+                    'db_connection_id':db_connection_id
+                }
+            )
+
+    else:
+        print "No tomo el post"
+        form = DatabaseQueryForm(
+            initial = {
+                'database_connection': dbConnection
+            }
+        )
+
+    return render(
+        request,
+        'database_manager/db_query_add.html',
+        {
+            'add_query_form': form,
+            'db_connection_id':db_connection_id
+        }
+    )
+
+def db_connection_run_query(request, db_connection_id, db_query_id):
+    dbConnection = get_object_or_404(DatabaseConnection, pk=db_connection_id)
+    dbQuery = get_object_or_404(DatabaseQuery, pk = db_query_id)
+
+    query = dbQuery.query
+    db = dbConnection.databaseName
+    host = dbConnection.hostName
+    port = dbConnection.port
+    user = dbConnection.username
+    passwd = dbConnection.password
+
+    try:
+        # We execute the query
+        db = MySQLdb.connect(host=host, port=int(port), user=user,passwd=passwd,db=db)
+        cursor = db.cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        # We obtain the column names to display as headers in table
+        headers = parseSQL(query, cursor)
+
+        messages.success(request, "Query executed!")
+    except Exception, e:
+        rows = None
+        headers = None
+
+        messages.error(request, "The Sql Query is not permitted, please enter a Sql Query valid")
+
+    # tables = extract_tables(query)
+    form = QuerySearch(initial = { 'query': query})
+    queries_saved_list = DatabaseQuery.objects.all()
+
+    return render(
+        request,
+        'database_manager/db_connection_run_querie.html',
+        {
+            'queryResult': rows,
+            'headers': headers,
+            'search_query_form': form,
+            'db_connection_id': db_connection_id,
+            'queries_list': queries_saved_list
+        }
+    )
 
 ####################### Functions #############################
 

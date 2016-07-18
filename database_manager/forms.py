@@ -17,3 +17,7 @@ class DatabaseConnectionEditForm(forms.ModelForm):
         model = DatabaseConnection
         fields = ['name', 'databaseName', 'hostName', 'port', 'username', 'password']
 
+class DatabaseQueryForm(forms.Form):
+    name = forms.CharField(label="Querie Name", max_length=20);
+    database_connection = forms.CharField(label="Database Connection")
+    query = forms.CharField(label="Query", max_length=1500)

@@ -16,6 +16,12 @@ label[for='id_query'] {
     margin-bottom: 15px;
 }
 
+.margin-right-19px {
+    float: right;
+    margin-right: 19px;
+    margin-bottom: 5px;
+}
+
 .save-button {
     margin-top: 15px;
     margin-left: 58px;
@@ -23,4 +29,8 @@ label[for='id_query'] {
 
 .add-button {
     float: left;
+}
+
+.dropdown-item {
+    margin-left: 28px;
 }

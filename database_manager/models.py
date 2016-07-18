@@ -14,9 +14,9 @@ class DatabaseConnection(models.Model):
     def __str__(self):
         return self.name
 
-class DatabaseQuerie(models.Model):
+class DatabaseQuery(models.Model):
     name = models.CharField(max_length=20)
-    querie = models.CharField(max_length=1500)
+    query = models.CharField(max_length=1500)
     database_connection = models.ForeignKey(DatabaseConnection, on_delete=models.CASCADE)
 
     def __str__(self):
