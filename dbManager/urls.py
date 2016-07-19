@@ -19,4 +19,5 @@ from django.contrib import admin
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^database_manager/', include('database_manager.urls')),
+    url(r'^accounts/', include('registration.backends.default.urls')),
 ]

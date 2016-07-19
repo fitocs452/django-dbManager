@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+
+{% load bootstrap3 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% bootstrap_messages %}
+{% load staticfiles %}
+
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static 'user_management/css/footer_style.css' %}" />
+    <title>
+        {% block title %}Database Manager{% endblock %}
+    </title>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>
+                {% block body_title %}
+                    Database Manager
+                {% endblock %}
+            </h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="description">
+            <p>
+                {% block description %}
+                This is a basic database manager
+                {% endblock %}
+            </p>
+        </div>
+    </div>
+    {% block content %}
+    {% endblock %}
+</body>
+
+<footer class="footer navbar-fixed-bottom">
+    <div class="container">
+        Database Manager Footer
+    </div>
+</footer>
+</html>

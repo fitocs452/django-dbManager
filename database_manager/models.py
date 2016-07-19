@@ -1,9 +1,11 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from django.conf import settings
 
 # Create your models here.
 class DatabaseConnection(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=1)
     name = models.CharField(max_length=20)
     databaseName = models.CharField(max_length=50)
     hostName = models.CharField(max_length=20)
