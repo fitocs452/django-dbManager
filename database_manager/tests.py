@@ -9,9 +9,6 @@ from .forms import *
 
 class DatabaseConnectionTests(TestCase):
 
-    def create_db_connection(name, databaseName, hostName, port, username, password):
-        return DatabaseConnection.objects.create(name, databaseName, hostName, port, username, password)
-
     def test_database_connection_list(self):
         DatabaseConnection.objects.create(name = 'Test1', databaseName = 'dbmanager_test', hostName = 'localhost', port = 33016, username = 'root', password = 'admin')
         DatabaseConnection.objects.create(name = 'Test2', databaseName = 'dbmanager_test', hostName = 'localhost', port = 33016, username = 'root', password = 'admin')
@@ -71,7 +68,7 @@ class DatabaseConnectionTests(TestCase):
         # self.assertEqual(response.status_code, 200)
         # self.assertEqual(has_key, False)
 
-    def test_database_connection_run_querie_view(self):
+    def test_database_connection_run_queries_view(self):
         request = 'fake request'
         # resp = self.client.post('/database_manager/db_connections/3/run_querie', {'choice': 1})
         response = db_connection_run_queries(request, 1)

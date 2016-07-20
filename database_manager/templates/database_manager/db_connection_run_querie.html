@@ -10,7 +10,6 @@
 <head>
     {% load staticfiles %}
     <link rel="stylesheet" type="text/css" href="{% static 'database_manager/styles.css' %}" />
-    <script src="{% static 'static_jquery/js/jquery.js' %}" type="text/javascript"></script>
     <script src="{% static 'database_manager/js/clear.js' %}" type="text/javascript"></script>
     
     <title>Query Search</title>
@@ -28,7 +27,7 @@
         </a>
     </div>
     <div class="container">
-        <form action="{% url 'database_manager:db_run_querie' db_connection_id %}" method="post" >
+        <form action="{% url 'database_manager:db_run_query' db_connection_id %}" method="post" >
             {% csrf_token %}
 
             <div class="row">
