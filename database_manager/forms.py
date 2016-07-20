@@ -5,6 +5,7 @@ class QuerySearch(forms.Form):
     query = forms.CharField(max_length = 250, widget = forms.Textarea, required = True)
 
 class DatabaseConnectionModelForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput())
     class Meta:
         model = DatabaseConnection
         fields = ['name', 'databaseName', 'hostName', 'port', 'username', 'password']

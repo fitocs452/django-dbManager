@@ -5,7 +5,7 @@ from . import views
 app_name = "database_manager"
 urlpatterns = [
     url(r'^$', views.dashboard, name='dashboard'),
-    url(r'^db_connections/(?P<db_connection_id>[0-9]+)/run_query$', views.db_connection_run_queries, name='db_run_query'),
+    url(r'^db_connections/(?P<db_connection_id>[0-9]+)/run_query$', views.DatabaseRunQuery.as_view(), name='db_run_query'),
     url(r'^db_connections/$', views.db_connection_list, name='db_connections_list'),
     url(r'^db_connections/add/$', views.DatabaseConnectionCreateView.as_view(), name='db_connections_add'),
     url(r'^db_connections/(?P<db_connection_id>[0-9]+)/edit/$', views.DatabaseConnectionEditView.as_view(), name='db_connection_edit'),

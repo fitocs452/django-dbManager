@@ -1,19 +1,9 @@
 # Django imports
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse
 from django.template import *
 from django.core.urlresolvers import *
-from django.views import *
-from django.db import connection
-from django.views.generic import TemplateView, View
+from django.views.generic import View
 from django.contrib import messages
-
-# Third party imports
-import sqlparse
-from sqlparse.sql import IdentifierList, Identifier
-from sqlparse.tokens import Keyword, DML
-
-import MySQLdb
 
 # Custom file imports
 from .models import *
@@ -149,37 +139,35 @@ class DatabaseQueryCreateView(View):
 
         return redirect(redirectUrl)
 
-def db_connection_run_queries(request, db_connection_id):
-    dbConnection = get_object_or_404(DatabaseConnection, pk=db_connection_id)
-    # if this is a POST request we need to process the form data
-    if request.method == 'POST':
-        # create a form instance and populate it with data from the request:
+class DatabaseRunQuery(View):
+    def get(self, request, db_connection_id):
+        dbConnection = get_object_or_404(DatabaseConnection, pk = db_connection_id)
+        queries_saved_list = DatabaseQuery.objects.filter(database_connection = dbConnection)
+        form = QuerySearch()
+
+        return render(
+            request,
+            'database_manager/db_connection_run_querie.html',
+            {
+                'search_query_form': form,
+                'db_connection_id': db_connection_id,
+                'queries_list': queries_saved_list
+            }
+        )
+
+    def post(self, request, db_connection_id):
+        redirectUrl = "/database_manager/db_connections/%d/run_query" % (int(db_connection_id))
+        dbConnection = get_object_or_404(DatabaseConnection, pk = db_connection_id)
+        queries_saved_list = DatabaseQuery.objects.filter(database_connection = dbConnection)
+
         form = QuerySearch(request.POST)
-        # check whether it's valid:
+
         if form.is_valid():
             query = form.cleaned_data['query']
 
-            data = {
-                'query': query
-            }
-            form = QuerySearch(data)
-
-            if verifyQuery(query) == False:
-                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query valid")
-
-                queries_saved_list = DatabaseQuery.objects.filter(database_connection = dbConnection)
-
-                return render(
-                    request,
-                    'database_manager/db_connection_run_querie.html',
-                    {
-                        'queryResult': None,
-                        'headers': None,
-                        'search_query_form': form,
-                        'db_connection_id': db_connection_id,
-                        'queries_list': queries_saved_list
-                    }
-                )
+            if (not verifyQuery(query)):
+                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query")
+                return redirect(redirectUrl)
 
             db = dbConnection.databaseName
             host = dbConnection.hostName
@@ -189,7 +177,14 @@ def db_connection_run_queries(request, db_connection_id):
 
             try:
                 # We execute the query
-                db = MySQLdb.connect(host=host, port=int(port), user=user,passwd=passwd,db=db)
+                db = MySQLdb.connect(
+                    host = host,
+                    port = int(port),
+                    user = user,
+                    passwd = passwd,
+                    db = db
+                )
+
                 cursor = db.cursor()
                 cursor.execute(query)
                 rows = cursor.fetchall()
@@ -202,42 +197,24 @@ def db_connection_run_queries(request, db_connection_id):
                 rows = None
                 headers = None
 
-                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query valid")
+                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query valid x")
 
-            # tables = extract_tables(query)
-
-            queries_saved_list = DatabaseQuery.objects.filter(database_connection = dbConnection)
-
-            return render(
-                request,
-                'database_manager/db_connection_run_querie.html',
-                {
-                    'queryResult': rows,
-                    'headers': headers,
-                    'search_query_form': form,
-                    'db_connection_id': db_connection_id,
-                    'queries_list': queries_saved_list
-                }
-            )
-
-    else:
-        form = QuerySearch()
-
-    queries_saved_list = DatabaseQuery.objects.filter(database_connection = dbConnection)
-
-    return render(
-        request,
-        'database_manager/db_connection_run_querie.html',
-        {
-            'search_query_form': form,
-            'db_connection_id': db_connection_id,
-            'queries_list': queries_saved_list
-        }
-    )
+        return render(
+            request,
+            'database_manager/db_connection_run_querie.html',
+            {
+                'queryResult': rows,
+                'headers': headers,
+                'search_query_form': form,
+                'db_connection_id': db_connection_id,
+                'queries_list': queries_saved_list
+            }
+        )
 
 def db_connection_list(request):
     logged_user = request.user
     dbConnections = getDatabaseConnectionsByUser(logged_user)
+
     return render(request, 'database_manager/db_connection_list.html', {'database_connections':dbConnections})
 
 def db_connection_delete(request, db_connection_id):
