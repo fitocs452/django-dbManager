@@ -54,8 +54,6 @@ class DatabaseConnectionCreateView(View):
             )
 
             dbConnection.save()
-
-            form = DatabaseConnectionForm()
             messages.success(request, "Connection Created")
 
         return redirect('/database_manager/db_connections/')
@@ -126,6 +124,18 @@ class DatabaseQueryCreateView(View):
             query = form.cleaned_data['query']
 
             dbConnection = get_object_or_404(DatabaseConnection, pk = db_connection_id)
+
+            redirectUrl = "/database_manager/db_connections/%d/run_query" % (int(db_connection_id))
+            if (not verifyQuery(query)):
+                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query")
+                return render(
+                    request,
+                    'database_manager/db_query_add.html',
+                    {
+                        'add_query_form': form,
+                        'db_connection_id':db_connection_id
+                    }
+                )
 
             dbQuery = DatabaseQuery(
                 name = name,
