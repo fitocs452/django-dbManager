@@ -22,5 +22,6 @@ urlpatterns = [
     url(r'^$', login),
     url(r'^admin/', admin.site.urls),
     url(r'^database_manager/', include('database_manager.urls')),
+    url(r'^users_admin/', include('users_administrator.urls')),
     url(r'^accounts/', include('registration.backends.default.urls')),
 ]
