@@ -32,10 +32,13 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'database_manager.apps.DatabaseManagerConfig',
+    'user_management.apps.UserManagementConfig',
     'django.contrib.admin',
+    'registration',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bootstrap3',
@@ -127,3 +130,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Django registration redux settings
+ACCOUNT_ACTIVATION_DAYS = 7 # One-week activation window; you may, of course, use a different value.
+REGISTRATION_AUTO_LOGIN = True # Automatically log the user in.
+SITE_ID = 1
+LOGIN_REDIRECT_URL = '/database_manager/'
