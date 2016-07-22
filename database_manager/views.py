@@ -12,8 +12,9 @@ from .forms import *
 from .general_functions.db_connection_functions import *
 from .general_functions.model_functions import *
 
-def dashboard(request):
-    return render(request, 'database_manager/dashboard.html', {})
+class DashboardView(View):
+    def get(self, request):
+        return render(request, 'database_manager/dashboard.html', {})
 
 class DatabaseConnectionCreateView(View):
     def get(self, request):
@@ -122,10 +123,8 @@ class DatabaseQueryCreateView(View):
         if form.is_valid():
             name = form.cleaned_data['name']
             query = form.cleaned_data['query']
-
             dbConnection = get_object_or_404(DatabaseConnection, pk = db_connection_id)
 
-            redirectUrl = "/database_manager/db_connections/%d/run_query" % (int(db_connection_id))
             if (not verifyQuery(query)):
                 messages.error(request, "The Sql Query is not permitted, please enter a Sql Query")
                 return render(
@@ -221,57 +220,59 @@ class DatabaseRunQuery(View):
             }
         )
 
-def db_connection_list(request):
-    logged_user = request.user
-    dbConnections = getDatabaseConnectionsByUser(logged_user)
+class DatabaseConnectionListView(View):
+    def get(self, request):
+        logged_user = request.user
+        dbConnections = getDatabaseConnectionsByUser(logged_user)
 
-    return render(request, 'database_manager/db_connection_list.html', {'database_connections':dbConnections})
+        return render(request, 'database_manager/db_connection_list.html', {'database_connections':dbConnections})
 
-def db_connection_delete(request, db_connection_id):
-    try:
-        dbConnection = get_object_or_404(DatabaseConnection, pk=db_connection_id)
-        dbConnection.delete()
-        messages.success(request, "Connection deleted")
-    except Exception, e:
-        messages.error(request, "Connection not deleted")
+class DatabaseConnectionDeleteView(View):
+    def get(self, request, db_connection_id):
+        try:
+            dbConnection = get_object_or_404(DatabaseConnection, pk=db_connection_id)
+            dbConnection.delete()
+            messages.success(request, "Connection deleted")
+        except Exception, e:
+            messages.error(request, "Connection not deleted")
 
-    dbConnections = DatabaseConnection.objects.all()
-    return render(request, 'database_manager/db_connection_list.html', {'database_connections':dbConnections})
+        return redirect('/database_manager/db_connections/')
 
-def db_connection_run_query(request, db_connection_id, db_query_id):
-    dbConnection = get_object_or_404(DatabaseConnection, pk=db_connection_id)
-    dbQuery = get_object_or_404(DatabaseQuery, pk = db_query_id)
+class DatabaseRunQueryListed(View):
+    def get(self, request, db_connection_id, db_query_id):
+        dbConnection = get_object_or_404(DatabaseConnection, pk = db_connection_id)
+        dbQuery = get_object_or_404(DatabaseQuery, pk = db_query_id)
 
-    query = dbQuery.query
-    db = dbConnection.databaseName
-    host = dbConnection.hostName
-    port = dbConnection.port
-    user = dbConnection.username
-    passwd = dbConnection.password
+        query = dbQuery.query
+        db = dbConnection.databaseName
+        host = dbConnection.hostName
+        port = dbConnection.port
+        user = dbConnection.username
+        passwd = dbConnection.password
 
-    # We execute the query
-    db = MySQLdb.connect(host=host, port=int(port), user=user,passwd=passwd,db=db)
-    cursor = db.cursor()
-    cursor.execute(query)
-    rows = cursor.fetchall()
+        # We execute the query
+        db = MySQLdb.connect(host=host, port=int(port), user=user,passwd=passwd,db=db)
+        cursor = db.cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
 
-    # We obtain the column names to display as headers in table
-    headers = parseSQL(query, cursor)
+        # We obtain the column names to display as headers in table
+        headers = parseSQL(query, cursor)
 
-    messages.success(request, "Query executed!")
+        messages.success(request, "Query executed!")
 
-    # tables = extract_tables(query)
-    form = QuerySearch(initial = { 'query': query})
-    queries_saved_list = DatabaseQuery.objects.filter(database_connection = dbConnection)
+        # tables = extract_tables(query)
+        form = QuerySearch(initial = { 'query': query })
+        queries_saved_list = DatabaseQuery.objects.filter(database_connection = dbConnection)
 
-    return render(
-        request,
-        'database_manager/db_connection_run_querie.html',
-        {
-            'queryResult': rows,
-            'headers': headers,
-            'search_query_form': form,
-            'db_connection_id': db_connection_id,
-            'queries_list': queries_saved_list
-        }
-    )
+        return render(
+            request,
+            'database_manager/db_connection_run_querie.html',
+            {
+                'queryResult': rows,
+                'headers': headers,
+                'search_query_form': form,
+                'db_connection_id': db_connection_id,
+                'queries_list': queries_saved_list
+            }
+        )
