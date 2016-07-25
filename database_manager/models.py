@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from django.db import models
 from django.conf import settings
+from simple_history.models import HistoricalRecords
 
 # Create your models here.
 class DatabaseConnection(models.Model):
@@ -12,6 +13,7 @@ class DatabaseConnection(models.Model):
     port = models.IntegerField(default=3306)
     username = models.CharField(max_length=30)
     password = models.CharField(max_length=30)
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.name
@@ -20,6 +22,7 @@ class DatabaseQuery(models.Model):
     name = models.CharField(max_length=20)
     query = models.CharField(max_length=1500)
     database_connection = models.ForeignKey(DatabaseConnection, on_delete=models.CASCADE)
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.name

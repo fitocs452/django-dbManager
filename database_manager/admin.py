@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as AuthUserAdmin
+from simple_history.admin import SimpleHistoryAdmin
 
 # Register your models here.
 from .models import *
@@ -31,4 +32,5 @@ admin.site.unregister(User)
 # register new user admin
 admin.site.register(User, UserAdmin)
 admin.site.register(DatabaseConnection, DatabaseConnectionAdmin)
-admin.site.register(DatabaseQuery)
+# admin.site.register(DatabaseConnection, )
+admin.site.register(DatabaseQuery, SimpleHistoryAdmin)
