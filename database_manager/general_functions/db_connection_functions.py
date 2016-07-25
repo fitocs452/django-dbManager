@@ -3,6 +3,7 @@ from sqlparse.sql import IdentifierList, Identifier
 from sqlparse.tokens import Keyword, DML
 
 import MySQLdb
+import pymongo
 
 """
     Purpose: Parse the SQL to get the headers of data
@@ -144,13 +145,18 @@ def verifyQuery(query):
     Purpose: Check if a database connection can be done (MySQL)
     Return: Boolean, where True means success and False fail
 """
-def testDbConnection(host, port, user, passwd, db):
-    try:
-        db = MySQLdb.connect(host=host,port=int(port), user=user,passwd=passwd,db=db)
-        cursor = db.cursor()
-        cursor.execute("SELECT VERSION()")
-        results = cursor.fetchone()
+def testDbConnection(type, host, port, user, passwd, db):
+    valid = False
+    if (type == 'MySQL'):
+        try:
+            db = MySQLdb.connect(host=host,port=int(port), user=user,passwd=passwd,db=db)
+            cursor = db.cursor()
+            cursor.execute("SELECT VERSION()")
+            results = cursor.fetchone()
 
-        return True
-    except Exception, e:
-        return False
+            valid = True
+        except Exception, e:
+            valid = False
+    elif (type == 'Mongo'):
+        
+

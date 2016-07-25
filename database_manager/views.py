@@ -54,10 +54,11 @@ class DatabaseConnectionCreateView(View):
             password = form.cleaned_data['password']
             port = form.cleaned_data['port']
             username = form.cleaned_data['username']
+            dbType = form.cleaned_data['type']
 
             # Here we check if the connection can be done
-            if (not testDbConnection(hostName, port, username, password, databaseName)):
-                messages.error(request, "Connection failed")
+            if (not testDbConnection(dbType.db_type, hostName, port, username, password, databaseName)):
+                messages.error(request, "Connection failed ")
 
                 return render(request, 'database_manager/db_connection_add.html', {'add_connection_form': form})
 
