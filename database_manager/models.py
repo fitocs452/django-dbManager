@@ -5,8 +5,16 @@ from django.conf import settings
 from simple_history.models import HistoricalRecords
 
 # Create your models here.
+
+class DatabaseType(models.Model):
+    db_type = models.CharField(max_length=15)
+
+    def __str__(self):
+        return self.db_type
+
 class DatabaseConnection(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=1)
+    # type = models.ForeignKey(DatabaseType, on_delete = models.CASCADE)
     name = models.CharField(max_length=20)
     databaseName = models.CharField(max_length=50)
     hostName = models.CharField(max_length=20)
