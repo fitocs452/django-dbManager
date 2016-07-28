@@ -6,13 +6,14 @@ class QuerySearch(forms.Form):
 
 class DatabaseConnectionModelForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput())
+    # collection = forms.CharField(max_length = 250, required = False)
     class Meta:
         model = DatabaseConnection
-        fields = ['type', 'name', 'databaseName', 'hostName', 'port', 'username', 'password']
+        fields = ['type', 'name', 'databaseName', 'collection','hostName', 'port', 'username', 'password']
 
-    def __init__(self, *args, **kwargs):
-        super(DatabaseConnectionModelForm, self).__init__(*args, **kwargs)
-        self.fields['type'].queryset = DatabaseType.objects.all()
+    # def __init__(self, *args, **kwargs):
+    #     super(DatabaseConnectionModelForm, self).__init__(*args, **kwargs)
+    #     self.fields['type'].queryset = DatabaseType.objects.all()
 
 class DatabaseQueryModelForm(forms.ModelForm):
     class Meta:

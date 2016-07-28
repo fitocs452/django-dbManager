@@ -4,13 +4,14 @@
 {% load bootstrap3 %}
 
 {% bootstrap_css %}
-{% bootstrap_javascript %}
+{% bootstrap_javascript jquery=1%}
 
 {% bootstrap_messages %}
 
 {% load staticfiles %}
 <head>
     <link rel="stylesheet" type="text/css" href="{% static 'database_manager/styles.css' %}" />
+    <script src="{% static 'database_manager/js/eval_connection_type.js' %}" type="text/javascript"></script>
     <title>Database Connection</title>
 </head>
 

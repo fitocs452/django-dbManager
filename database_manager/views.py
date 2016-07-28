@@ -47,8 +47,10 @@ class DatabaseConnectionCreateView(View):
 
         # We check if the form fields data is in correct format
         if form.is_valid():
+            print "Data valida"
             # We obtain the data from form
             databaseName = form.cleaned_data['databaseName']
+            collection = form.cleaned_data['collection']
             hostName = form.cleaned_data['hostName']
             name = form.cleaned_data['name']
             password = form.cleaned_data['password']
@@ -57,15 +59,18 @@ class DatabaseConnectionCreateView(View):
             dbType = form.cleaned_data['type']
 
             # Here we check if the connection can be done
-            if (not testDbConnection(dbType.db_type, hostName, port, username, password, databaseName)):
+            if (not testDbConnection(dbType.db_type, hostName, port, username, password, databaseName, collection)):
+                print "Conexion fallida"
                 messages.error(request, "Connection failed ")
 
                 return render(request, 'database_manager/db_connection_add.html', {'add_connection_form': form})
 
             # We create the connection
             dbConnection = DatabaseConnection(
+                type = dbType,
                 name = name,
                 databaseName = databaseName,
+                collection = collection,
                 hostName = hostName,
                 port = port,
                 username = username,
@@ -104,11 +109,13 @@ class DatabaseConnectionEditView(View):
         if form.is_valid():
             databaseName = form.cleaned_data['databaseName']
             hostName = form.cleaned_data['hostName']
+            collection = form.cleaned_data['collection']
             port = form.cleaned_data['port']
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
+            dbType = form.cleaned_data['type']
 
-            if (not testDbConnection(hostName, port, username, password, databaseName)):
+            if (not testDbConnection(dbType.db_type, hostName, port, username, password, databaseName, collection)):
                 messages.error(request, "Connection failed")
 
                 return render(
@@ -164,7 +171,7 @@ class DatabaseQueryCreateView(View):
             dbConnection = get_object_or_404(DatabaseConnection, pk = db_connection_id)
 
             # We check if the query is correct
-            if (not verifyQuery(query)):
+            if (not verifyQuery(query, dbConnection.type.db_type)):
                 messages.error(request, "The Sql Query is not permitted, please enter a Sql Query")
                 return render(
                     request,
@@ -225,39 +232,34 @@ class DatabaseRunQuery(View):
         if form.is_valid():
             query = form.cleaned_data['query']
 
+            databaseType = dbConnection.type.db_type
+
             # The query is verified
-            if (not verifyQuery(query)):
-                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query")
+            if (not verifyQuery(query, databaseType)):
+                messages.error(request, "The SQl Query is not permitted, please enter a Sql Query")
                 return redirect(redirectUrl)
 
-            db = dbConnection.databaseName
-            host = dbConnection.hostName
-            port = dbConnection.port
-            user = dbConnection.username
-            passwd = dbConnection.password
-
             try:
-                # We execute the query
-                db = MySQLdb.connect(host = host, port = int(port), user = user, passwd = passwd, db = db)
+                if (databaseType == 'MySQL'):
+                    rows = executeMysqlQuery(dbConnection, query)
+                    headers = getHeadersMysql(dbConnection, query)
 
-                cursor = db.cursor()
-                cursor.execute(query)
-                rows = cursor.fetchall()
-
-                # We obtain the column names to display as headers in table
-                headers = parseSQL(query, cursor)
+                if (databaseType == 'Mongo'):
+                    rows = executeMongoQuery(dbConnection, query)
+                    headers = ['Key', 'Value']
 
                 messages.success(request, "Query executed!")
             except Exception, e:
                 rows = None
                 headers = None
 
-                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query valid x")
+                messages.error(request, "The Sql Query is not permitted, please enter a Sql Query valid")
 
         return render(
             request,
             'database_manager/db_connection_run_querie.html',
             {
+                'db': databaseType,
                 'queryResult': rows,
                 'headers': headers,
                 'search_query_form': form,
@@ -297,20 +299,15 @@ class DatabaseRunQueryListed(View):
         dbQuery = get_object_or_404(DatabaseQuery, pk = db_query_id)
 
         query = dbQuery.query
-        db = dbConnection.databaseName
-        host = dbConnection.hostName
-        port = dbConnection.port
-        user = dbConnection.username
-        passwd = dbConnection.password
+        databaseType = dbConnection.type.db_type
 
-        # We execute the query
-        db = MySQLdb.connect(host=host, port=int(port), user=user,passwd=passwd,db=db)
-        cursor = db.cursor()
-        cursor.execute(query)
-        rows = cursor.fetchall()
+        if (databaseType == 'MySQL'):
+            rows = executeMysqlQuery(dbConnection, query)
+            headers = getHeadersMysql(dbConnection, query)
 
-        # We obtain the column names to display as headers in table
-        headers = parseSQL(query, cursor)
+        if (databaseType == 'Mongo'):
+            rows = executeMongoQuery(dbConnection, query)
+            headers = ['Key', 'Value']
 
         messages.success(request, "Query executed!")
 
@@ -322,6 +319,7 @@ class DatabaseRunQueryListed(View):
             request,
             'database_manager/db_connection_run_querie.html',
             {
+                'db': databaseType,
                 'queryResult': rows,
                 'headers': headers,
                 'search_query_form': form,

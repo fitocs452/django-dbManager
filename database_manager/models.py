@@ -14,9 +14,10 @@ class DatabaseType(models.Model):
 
 class DatabaseConnection(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=1)
-    type = models.ForeignKey(DatabaseType, on_delete = models.CASCADE, default=1)
+    type = models.ForeignKey(DatabaseType, on_delete = models.CASCADE)
     name = models.CharField(max_length=20)
     databaseName = models.CharField(max_length=50)
+    collection = models.CharField(max_length=50, default="None")
     hostName = models.CharField(max_length=20)
     port = models.IntegerField(default=3306)
     username = models.CharField(max_length=30)

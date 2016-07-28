@@ -3,7 +3,8 @@ from sqlparse.sql import IdentifierList, Identifier
 from sqlparse.tokens import Keyword, DML
 
 import MySQLdb
-import pymongo
+from pymongo import MongoClient
+import json
 
 """
     Purpose: Parse the SQL to get the headers of data
@@ -128,12 +129,13 @@ def normalizeColumnNames(columnNames):
     Purpose: Check if the query is used just to select data
     Return: Boolean, where True means valid query and False invalid query
 """
-def verifyQuery(query):
+def verifyQuery(query, dbType):
     query = str(query.lower())
     sqlActionsNotAllowed = ('insert', 'drop', 'delete', 'update', 'create')
 
-    if not ("select" in query):
-        return False
+    if (dbType == 'MySQL'):
+        if not ("select" in query):
+            return False
 
     for action in sqlActionsNotAllowed:
         if (action in query):
@@ -142,10 +144,10 @@ def verifyQuery(query):
     return True
 
 """
-    Purpose: Check if a database connection can be done (MySQL)
+    Purpose: Check if a database connection can be done (MySQL, Mongo)
     Return: Boolean, where True means success and False fail
 """
-def testDbConnection(type, host, port, user, passwd, db):
+def testDbConnection(type, host, port, user, passwd, db, collection):
     valid = False
     if (type == 'MySQL'):
         try:
@@ -157,6 +159,68 @@ def testDbConnection(type, host, port, user, passwd, db):
             valid = True
         except Exception, e:
             valid = False
+
     elif (type == 'Mongo'):
-        
+        try:
+            maxSevSelDelay = 1
+            client = MongoClient(host, int(port), serverSelectionTimeoutMS = maxSevSelDelay)
+            db_connection = client[db][collection]
+            client.server_info()
+            valid = True
+        except Exception, e:
+            valid = False
+    return valid
+
+def executeMysqlQuery(dbConnection, query):
+    db = dbConnection.databaseName
+    host = dbConnection.hostName
+    port = dbConnection.port
+    user = dbConnection.username
+    passwd = dbConnection.password
+
+    db = MySQLdb.connect(host = host, port = int(port), user = user, passwd = passwd, db = db)
+
+    cursor = db.cursor()
+    cursor.execute(query)
+
+    return cursor.fetchall()
+
+def getHeadersMysql(dbConnection, query):
+    db = dbConnection.databaseName
+    host = dbConnection.hostName
+    port = dbConnection.port
+    user = dbConnection.username
+    passwd = dbConnection.password
+
+    db = MySQLdb.connect(host = host, port = int(port), user = user, passwd = passwd, db = db)
+
+    cursor = db.cursor()
+    headers = parseSQL(query, cursor)
+
+    return headers
+
+def executeMongoQuery(dbConnection, query):
+    db = dbConnection.databaseName
+    collection = dbConnection.collection
+
+    client = MongoClient(dbConnection.hostName, int(dbConnection.port))
+    dbCollection = client[db][collection]
+
+    json_data = json.loads(str(query))
+    rows = dbCollection.find(json_data)
+
+    returnData = {}
+
+    cont = 0
+    for entry in rows:
+        row = []
+        for key in list(entry):
+            if (not 'id' in key):
+                result = str(key) + " : " + str(entry[key])
+                row.append(result)
+
+        returnData[cont] = row
+        cont += 1
+
+    return returnData
 

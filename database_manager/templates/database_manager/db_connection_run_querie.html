@@ -88,13 +88,27 @@
                     {% endfor %}
                 </thead>
                 <tbody>
-                    {% for row in queryResult %}
-                    <tr>
-                        {% for data in row%}
-                            <td>{{ data }}</td>
+                    {% if db == 'Mongo' %}
+                        {% for key, row in queryResult.items %}
+                        <tr>
+                            <td>{{ key }}</td>
+                                <td>
+                                    {% for value in row %}
+                                        <li class="dropdown-item">{{ value }}</li>
+                                    {% endfor %}
+                                </td>
+                        </tr>
                         {% endfor %}
-                    </tr>
-                    {% endfor %}
+                    {% endif %}
+                    {% if db == 'MySQL' %}
+                        {% for row in queryResult %}
+                        <tr>
+                            {% for data in row%}
+                                <td>{{ data }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
                 </tbody>
             </table>
         </div>
